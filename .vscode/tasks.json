@@ -1,0 +1,62 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"build",
+				"${workspaceFolder}/log-analyzer.slnx",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "test",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"test",
+				"${workspaceFolder}/log-analyzer-tests/log-analyzer-tests.csproj",
+				"--logger",
+				"console;verbosity=normal"
+			],
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "publish (win-x64)",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"publish",
+				"${workspaceFolder}/log-analyzer/log-analyzer.csproj",
+				"-c",
+				"Release",
+				"-r",
+				"win-x64",
+				"--self-contained",
+				"true",
+				"-p:PublishSingleFile=true",
+				"-o",
+				"${workspaceFolder}/publish"
+			],
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "Makefile: test",
+			"type": "shell",
+			"command": "make test",
+			"detail": "Runs 'make test' from the Makefile (requires make to be installed)"
+		}
+	]
+}
