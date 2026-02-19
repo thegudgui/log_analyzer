@@ -119,6 +119,8 @@ Used `File.ReadLines` to process logs line-by-line via lazy enumeration. This en
 ### Performance Optimization
 - **Source-Generated Regex**: Used .NET `GeneratedRegex` for word splitting. This compiles the regex pattern at build time rather than at runtime, eliminating the overhead of runtime compilation and resolving the `SYSLIB1045` performance warning.
 - **HashSet for Stop Words**: Stop-word lookups use a `HashSet<string>` with `StringComparer.OrdinalIgnoreCase`, providing O(1) average-case lookups instead of scanning through a list.
+- **Top 3 Word Selection: Sorting vs. Partial Sort**: 
+  Used LINQ `OrderByDescending(...).Take(3)` for word frequency selection. While a selection algorithm (like a Min-Heap) would have a better theoretical complexity of $O(N \log K)$ ($K=3$), for typical log analysis sorting unique words is $O(U \log U)$ where $U$ is the number of unique words (significantly smaller than total lines). This choice prioritizes **readability and correctness** (specifically handling alphabetical tie-breaking) without a meaningful impact on performance for standard log files.
 
 ### Architecture: Separation of Concerns
 The application is structured into three distinct layers:
