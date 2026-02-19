@@ -116,6 +116,13 @@ To run all 34 unit and integration tests:
 dotnet test
 ```
 
+### Code Coverage
+To collect code coverage using the built-in `coverlet` collector:
+```sh
+dotnet test --collect:"XPlat Code Coverage" --results-directory ./coverage
+```
+The results will be generated in the `./coverage` directory as a Cobertura XML file, which can be visualized using tools like the **ReportGenerator** global tool or the **Coverage Gutters** VS Code extension.
+
 ## Design Trade-offs
 
 ### Streaming vs. Loading Entire File
@@ -149,12 +156,6 @@ Any line not matching the exact `[ISO-8601 timestamp] [LEVEL] [MESSAGE]` format 
 - **TextWriter Abstraction**: `ReportPrinter.WriteReport` accepts a `TextWriter` parameter, allowing tests to pass a `StringWriter` and assert against the exact formatted output without any console dependency.
 - **Public Aggregator State**: `LogAggregator` exposes properties like `TotalCount` and `MostRecentError` for fine-grained assertions in unit tests, while `CreateReport` bundles everything into the immutable `LogReport` for integration-level verification.
 - **34 tests** cover parsing edge cases (empty strings, missing fields, invalid timestamps, garbage input), aggregation logic (tie-breaking, word counting, stop-word filtering), and output formatting (exact line order, comma separation, empty word lists).
-
-## Code Coverage
-
-To generate a detailed HTML coverage report:
-```sh
-dotnet test log-analyzer-tests/log-analyzer-tests.csproj --collect:"XPlat Code Coverage" --results-directory ./coverage
 reportgenerator -reports:"coverage/*/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html
 ```
 Then open `coveragereport/index.html` in your browser.
