@@ -1,81 +1,142 @@
 # log-analyzer
 
-## Overview
-log-analyzer is a C# console application designed to analyze log files. This repository contains the main application and a separate xUnit test project.
+A C# console application that parses structured log files and generates a summary report including entry counts by severity level, malformed line detection, most recent error identification, and top frequent words in INFO messages.
 
 ## Project Structure
-- `log-analyzer/` - Main console application project
-- `log-analyzer-tests/` - xUnit test project for unit testing
 
+```
+log-analyzer/                  # Main console application
+├── Program.cs                 # CLI entry point and orchestration
+├── Logic/
+│   ├── LogProcessor.cs        # Line parsing and word tokenization
+│   ├── LogAggregator.cs       # Stateful aggregation and report generation
+│   └── ReportPrinter.cs       # Output formatting (TextWriter-based)
+└── Models/
+    ├── LogLevel.cs            # Enum: TRACE, DEBUG, INFO, WARN, ERROR, FATAL
+    ├── LogEntry.cs            # Immutable record for a parsed log line
+    └── LogReport.cs           # Immutable record for the final report
+
+log-analyzer-tests/            # xUnit test project (34 tests)
+├── LogProcessorTests.cs       # Parsing and word filtering tests
+├── LogAggregatorTests.cs      # Aggregation, tie-breaking, and state tests
+└── ReportPrinterTests.cs      # Output format verification tests
+
+logs/                          # Sample log files for testing
+```
+
+## Prerequisites
+
+- [.NET SDK 10.0](https://dotnet.microsoft.com/download) or later
 
 ## Build Instructions
-1. Ensure you have the .NET SDK installed (version 10.0.2 or later).
-2. Open a terminal in the project root directory.
-3. To restore dependencies and build the solution, run:
-   ```sh
-   dotnet build log-analyzer.sln
-   ```
-4. To compile the application as a standalone Windows executable, run:
-   ```sh
-   dotnet publish log-analyzer/log-analyzer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish
-   ```
-   This will create a single-file executable in the `publish` folder.
+
+To restore dependencies and build the solution:
+```sh
+dotnet build
+```
+
+To compile as a self-contained Windows executable:
+```sh
+dotnet publish log-analyzer/log-analyzer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish
+```
 
 ## Run Instructions
 
-To run the main application as a standalone executable:
+To satisfy the `log-analyzer <path-to-logfile>` usage requirement, a `log-analyzer.bat` is provided in the root, which redirects to the application. Alternatively, the published executable is named `log-analyzer.exe`.
 
-1. Navigate to the `publish` folder:
-   ```sh
-   cd publish
-   ```
-2. Run the app using the batch file (recommended for Windows):
-   ```sh
-   log-analyzer
-   ```
-   Or run the executable directly:
-   ```sh
-   log-analyzer.exe
-   ```
-
-To run from any terminal, add the `publish` folder to your system PATH or copy `log-analyzer.bat` and `log-analyzer.exe` to a directory already in your PATH. This allows you to simply type `log-analyzer` from anywhere.
-
-You can also run the app using the .NET CLI (for development):
-```sh
-dotnet run --project log-analyzer/log-analyzer.csproj
+**Using the provided script (Windows Quick-Start):**
+```cmd
+.\log-analyzer.bat <path-to-logfile>
 ```
 
+**Using the .NET CLI (recommended for development):**
+```sh
+dotnet run --project log-analyzer/log-analyzer.csproj -- <path-to-logfile>
+```
+
+**Using the published executable:**
+```sh
+./publish/log-analyzer.exe <path-to-logfile>
+```
+
+**Adding to PATH:**
+To use `log-analyzer` globally from any directory:
+1.  **Windows**: Add the folder containing `log-analyzer.bat` or the published executable to your User `PATH` environment variable.
+2.  **Restart** your terminal.
+3.  Run as: `log-analyzer <logfile>`
+
+**Example:**
+```sh
+.\log-analyzer.bat logs/sample_log_20_entries.txt
+```
+
+**Exit Codes:**
+- `0` — Success
+- `2` — File not found or unreadable
+
 ## Example Output
-Running the analyzer on a sample log file will produce output similar to the following:
+
+Running the analyzer on the included sample log file (`logs/sample_log_20_entries.txt`):
 ```text
 Total Entries: 20
-TRACE: 0
-DEBUG: 0
-INFO: 12
+TRACE: 3
+DEBUG: 1
+INFO: 9
 WARN: 3
-ERROR: 4
+ERROR: 1
 FATAL: 1
-Malformed: 0
-Most Recent ERROR: Connection to server 'srv-01' failed
-Top 3 Frequent Words (INFO): data, received, user
+Malformed: 2
+Most Recent ERROR: Unhandled exception
+Top 3 Frequent Words (INFO): file, successfully, uploaded
 ```
 
 ## Test Instructions
-To run all unit tests:
 
+To run all 34 unit and integration tests:
 ```sh
 dotnet test
 ```
 
 ## Design Trade-offs
-- **Streaming Processing**: Used `File.ReadLines` to process logs line-by-line. This ensures the application can handle multi-gigabyte log files with a constant, low memory footprint, rather than loading the entire file into RAM.
-- **Performance Optimization**: Used .NET Source Generators (`GeneratedRegex`) for word splitting and `HashSet<string>` for stop-word lookups, ensuring $O(N)$ performance for log analysis.
-- **Strict Parsing**: Any line not matching the `[ISO-8601] [LEVEL] [MESSAGE]` format is categorized as "Malformed" to maintain report integrity, rather than crashing or guessing the content.
-- **Stability**: Segregated logic into `LogAnalyzer.Logic` and models into `LogAnalyzer.Models` to support robust unit testing with xUnit, decoupled from the console I/O.
-- **Tie-breaking**: In cases where multiple ERROR logs have the exact same timestamp, the application reports the one that appears *last* in the file to ensure the most recent state is captured.
+
+### Streaming vs. Loading Entire File
+Used `File.ReadLines` to process logs line-by-line via lazy enumeration. This ensures the application can handle multi-gigabyte log files with a constant, low memory footprint — only one line is held in memory at a time, rather than loading the entire file into RAM with `File.ReadAllLines` or `File.ReadAllText`.
+
+### Performance Optimization
+- **Source-Generated Regex**: Used .NET `GeneratedRegex` for word splitting. This compiles the regex pattern at build time rather than at runtime, eliminating the overhead of runtime compilation and resolving the `SYSLIB1045` performance warning.
+- **HashSet for Stop Words**: Stop-word lookups use a `HashSet<string>` with `StringComparer.OrdinalIgnoreCase`, providing O(1) average-case lookups instead of scanning through a list.
+
+### Architecture: Separation of Concerns
+The application is structured into three distinct layers:
+- **`LogProcessor`** — Pure stateless utility: parses individual lines and tokenizes words. It has no knowledge of "the report" or accumulated state.
+- **`LogAggregator`** — Stateful accumulator: iterates through lines, tracks counts, and builds the final `LogReport`. Owns the `Analyze` entry point because it manages the aggregation lifecycle.
+- **`ReportPrinter`** — Output formatter: accepts a `TextWriter` abstraction instead of writing directly to `Console.Out`. This "Humble Object" pattern decouples formatting from I/O, allowing unit tests to verify exact output without capturing the console.
+
+This separation was chosen over a single-file approach to keep each class focused on one responsibility, making them independently testable and easier to extend (e.g., supporting new log formats or output targets).
+
+### Immutable Domain Models
+Used C# `record` types for `LogEntry` and `LogReport`. Records provide value-based equality, immutability, and concise syntax. This ensures parsed data cannot be accidentally mutated after creation, which is important for thread safety and correctness in a streaming pipeline.
+
+### Strict Parsing Strategy
+Any line not matching the exact `[ISO-8601 timestamp] [LEVEL] [MESSAGE]` format is counted as "Malformed" rather than silently dropped or partially parsed. This approach favors data integrity over leniency — the report will always account for every line in the file, giving the operator confidence that no data was lost.
+
+### Tie-breaking
+- **Most Recent ERROR**: Uses `>=` comparison on timestamps so that when multiple ERROR entries share the same timestamp, the one appearing *last* in the file wins. This aligns with the assumption that file order reflects chronological order within the same second.
+- **Top 3 Words**: Ties in word frequency are broken alphabetically (`ThenBy(p => p.Key)`), ensuring deterministic, reproducible output regardless of dictionary enumeration order.
+
+### Testability
+- **TextWriter Abstraction**: `ReportPrinter.WriteReport` accepts a `TextWriter` parameter, allowing tests to pass a `StringWriter` and assert against the exact formatted output without any console dependency.
+- **Public Aggregator State**: `LogAggregator` exposes properties like `TotalCount` and `MostRecentError` for fine-grained assertions in unit tests, while `CreateReport` bundles everything into the immutable `LogReport` for integration-level verification.
+- **34 tests** cover parsing edge cases (empty strings, missing fields, invalid timestamps, garbage input), aggregation logic (tie-breaking, word counting, stop-word filtering), and output formatting (exact line order, comma separation, empty word lists).
 
 ## Code Coverage
-To view detailed code coverage:
-1. Run `dotnet test log-analyzer-tests/log-analyzer-tests.csproj --collect:"XPlat Code Coverage" --results-directory ./coverage`
-2. Run `reportgenerator -reports:"coverage/*/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html`
-3. Open `coveragereport/index.html` in your browser.
+
+To generate a detailed HTML coverage report:
+```sh
+dotnet test log-analyzer-tests/log-analyzer-tests.csproj --collect:"XPlat Code Coverage" --results-directory ./coverage
+reportgenerator -reports:"coverage/*/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html
+```
+Then open `coveragereport/index.html` in your browser.
+
+> **Note:** `reportgenerator` is a .NET global tool. Install it with:
+> `dotnet tool install -g dotnet-reportgenerator-globaltool`
