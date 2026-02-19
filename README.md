@@ -37,22 +37,27 @@ To restore dependencies and build the solution:
 dotnet build
 ```
 
-To compile as a self-contained executable for your platform:
+To compile as a **Self-Contained** executable (which includes the .NET runtime so the end-user does **not** need to install .NET 10.0):
 
 **Windows (win-x64):**
 ```sh
-dotnet publish log-analyzer/log-analyzer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish
+dotnet publish log-analyzer/log-analyzer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish/win-x64
+mv ./publish/win-x64/log-analyzer.exe ./publish/log-analyzer-win-x64.exe
 ```
 
 **Linux (linux-x64):**
 ```sh
-dotnet publish log-analyzer/log-analyzer.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o ./publish
+dotnet publish log-analyzer/log-analyzer.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o ./publish/linux-x64
+mv ./publish/linux-x64/log-analyzer ./publish/log-analyzer-linux-x64
 ```
 
 **macOS (osx-arm64):**
 ```sh
-dotnet publish log-analyzer/log-analyzer.csproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true -o ./publish
+dotnet publish log-analyzer/log-analyzer.csproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true -o ./publish/osx-arm64
+mv ./publish/osx-arm64/log-analyzer ./publish/log-analyzer-osx-arm64
 ```
+
+*Note: The resulting binary in the `./publish` folder is standalone. You can ship just that single file (e.g., `publish/log-analyzer-win-x64.exe`) to a user.*
 
 ## Run Instructions
 
