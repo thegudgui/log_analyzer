@@ -25,13 +25,14 @@ public class LogAggregator
 
     public void ProcessLine(string line)
     {
-        TotalCount++;
         var entry = LogProcessor.ParseLine(line);
         if (entry == null)
         {
             MalformedCount++;
             return;
         }
+
+        TotalCount++;
 
         if (entry.Level == LogLevel.ERROR)
         {

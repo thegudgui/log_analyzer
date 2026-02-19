@@ -146,7 +146,7 @@ public class LogProcessorTests
             var report = LogAggregator.Analyze(lines);
 
             // Assert
-            Assert.Equal(4, report.TotalCount);
+            Assert.Equal(3, report.TotalCount);
             Assert.Equal(1, report.MalformedCount);
             Assert.Equal(1, report.LevelCounts[LogLevel.INFO]);
             Assert.Equal(2, report.LevelCounts[LogLevel.ERROR]);

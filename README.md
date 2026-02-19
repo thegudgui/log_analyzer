@@ -97,7 +97,7 @@ To use `log-analyzer` globally from any directory:
 
 Running the analyzer on the included sample log file (`logs/sample_log_20_entries.txt`):
 ```text
-Total Entries: 20
+Total Entries: 18
 TRACE: 3
 DEBUG: 1
 INFO: 9
@@ -156,4 +156,3 @@ Any line not matching the exact `[ISO-8601 timestamp] [LEVEL] [MESSAGE]` format 
 - **TextWriter Abstraction**: `ReportPrinter.WriteReport` accepts a `TextWriter` parameter, allowing tests to pass a `StringWriter` and assert against the exact formatted output without any console dependency.
 - **Public Aggregator State**: `LogAggregator` exposes properties like `TotalCount` and `MostRecentError` for fine-grained assertions in unit tests, while `CreateReport` bundles everything into the immutable `LogReport` for integration-level verification.
 - **34 tests** cover parsing edge cases (empty strings, missing fields, invalid timestamps, garbage input), aggregation logic (tie-breaking, word counting, stop-word filtering), and output formatting (exact line order, comma separation, empty word lists).
-reportgenerator -reports:"coverage/*/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html

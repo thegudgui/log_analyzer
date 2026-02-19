@@ -17,7 +17,7 @@ public class LogAggregatorTests
         agg.ProcessLine("2025-01-01T10:00:01Z ERROR Problem");
 
         // Assert
-        Assert.Equal(3, agg.TotalCount);
+        Assert.Equal(2, agg.TotalCount);
         Assert.Equal(1, agg.MalformedCount);
         Assert.Equal(1, agg.GetLevelCounts()[LogLevel.INFO]);
         Assert.Equal(1, agg.GetLevelCounts()[LogLevel.ERROR]);
