@@ -21,6 +21,8 @@ log-analyzer-tests/            # xUnit test project (34 tests)
 ├── LogAggregatorTests.cs      # Aggregation, tie-breaking, and state tests
 └── ReportPrinterTests.cs      # Output format verification tests
 
+log-analyzer.bat               # Windows execution script
+log-analyzer.sh                # Unix/macOS execution script
 logs/                          # Sample log files for testing
 ```
 
@@ -35,35 +37,47 @@ To restore dependencies and build the solution:
 dotnet build
 ```
 
-To compile as a self-contained Windows executable:
+To compile as a self-contained executable for your platform:
+
+**Windows (win-x64):**
 ```sh
 dotnet publish log-analyzer/log-analyzer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish
 ```
 
+**Linux (linux-x64):**
+```sh
+dotnet publish log-analyzer/log-analyzer.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o ./publish
+```
+
+**macOS (osx-arm64):**
+```sh
+dotnet publish log-analyzer/log-analyzer.csproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true -o ./publish
+```
+
 ## Run Instructions
 
-To satisfy the `log-analyzer <path-to-logfile>` usage requirement, a `log-analyzer.bat` is provided in the root, which redirects to the application. Alternatively, the published executable is named `log-analyzer.exe`.
+To satisfy the `log-analyzer <path-to-logfile>` usage requirement, a redirection script is provided in the root for both Windows (`log-analyzer.bat`) and Unix/macOS (`log-analyzer.sh`).
 
-**Using the provided script (Windows Quick-Start):**
+### Windows
 ```cmd
 .\log-analyzer.bat <path-to-logfile>
 ```
 
-**Using the .NET CLI (recommended for development):**
-```sh
-dotnet run --project log-analyzer/log-analyzer.csproj -- <path-to-logfile>
+### Unix / macOS
+```bash
+./log-analyzer.sh <path-to-logfile>
 ```
 
-**Using the published executable:**
-```sh
-./publish/log-analyzer.exe <path-to-logfile>
+**Alternative: Using the .NET CLI (Cross-platform):**
+```bash
+dotnet run --project log-analyzer/log-analyzer.csproj -- <path-to-logfile>
 ```
 
 **Adding to PATH:**
 To use `log-analyzer` globally from any directory:
-1.  **Windows**: Add the folder containing `log-analyzer.bat` or the published executable to your User `PATH` environment variable.
-2.  **Restart** your terminal.
-3.  Run as: `log-analyzer <logfile>`
+1.  **Windows**: Add the folder containing `log-analyzer.bat` to your User `PATH`.
+2.  **Unix / macOS**: Add the project root to your `$PATH` or symlink `log-analyzer` to `/usr/local/bin`.
+3.  **Restart** your terminal and run: `log-analyzer <logfile>`
 
 **Example:**
 ```sh
