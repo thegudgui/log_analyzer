@@ -157,8 +157,3 @@ Any line not matching the exact `[ISO-8601 timestamp] [LEVEL] [MESSAGE]` format 
 - **Public Aggregator State**: `LogAggregator` exposes properties like `TotalCount` and `MostRecentError` for fine-grained assertions in unit tests, while `CreateReport` bundles everything into the immutable `LogReport` for integration-level verification.
 - **34 tests** cover parsing edge cases (empty strings, missing fields, invalid timestamps, garbage input), aggregation logic (tie-breaking, word counting, stop-word filtering), and output formatting (exact line order, comma separation, empty word lists).
 reportgenerator -reports:"coverage/*/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html
-```
-Then open `coveragereport/index.html` in your browser.
-
-> **Note:** `reportgenerator` is a .NET global tool. Install it with:
-> `dotnet tool install -g dotnet-reportgenerator-globaltool`
