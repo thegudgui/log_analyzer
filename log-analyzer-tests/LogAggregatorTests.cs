@@ -1,7 +1,7 @@
 using LogAnalyzer.Logic;
 using LogAnalyzer.Models;
 
-namespace log_analyzer_tests;
+namespace LogAnalyzer.Tests;
 
 public class LogAggregatorTests
 {

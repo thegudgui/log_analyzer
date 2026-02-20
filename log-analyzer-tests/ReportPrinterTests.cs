@@ -2,7 +2,7 @@ using LogAnalyzer.Logic;
 using LogAnalyzer.Models;
 using System.Text;
 
-namespace log_analyzer_tests;
+namespace LogAnalyzer.Tests;
 
 public class ReportPrinterTests
 {
